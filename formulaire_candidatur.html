@@ -274,12 +274,12 @@
                 </div>
             </div>
 
-            <!-- Nom de l'Université (chargé dynamiquement via l'API Hipolabs selon le pays choisi) -->
+            <!-- Nom de l'Université (chargée dynamiquement selon le pays choisi) -->
             <div class="form-group full-width">
                 <label for="universite">Nom de l'Université Accréditée *</label>
                 <select id="universite" name="universite" class="select2-universites" required>
                     <option value="">-- D'abord, sélectionnez un pays d'établissement ci-dessus --</option>
-                </select>sss
+                </select>
             </div>
         </fieldset>
 
@@ -336,47 +336,19 @@
 <script>
     $(document).ready(function() {
 
-        // Cache pour éviter de rappeler l'API pays plusieurs fois
-        let listePaysCache = null;
-
         // Liste de secours si l'API pays est injoignable (mode dégradé)
-        // fr = nom affiché, en = nom utilisé pour interroger l'API Hipolabs
         const listePaysSecours = [
-            { fr: "Burundi", en: "Burundi" },
-            { fr: "France", en: "France" },
-            { fr: "Belgique", en: "Belgium" },
-            { fr: "Canada", en: "Canada" },
-            { fr: "États-Unis", en: "United States" },
-            { fr: "Allemagne", en: "Germany" },
-            { fr: "Royaume-Uni", en: "United Kingdom" },
-            { fr: "Suisse", en: "Switzerland" },
-            { fr: "Rwanda", en: "Rwanda" },
-            { fr: "Kenya", en: "Kenya" },
-            { fr: "Tanzanie", en: "Tanzania" },
-            { fr: "République démocratique du Congo", en: "Democratic Republic of the Congo" },
-            { fr: "Sénégal", en: "Senegal" },
-            { fr: "Côte d'Ivoire", en: "Ivory Coast" },
-            { fr: "Cameroun", en: "Cameroon" },
-            { fr: "Maroc", en: "Morocco" },
-            { fr: "Algérie", en: "Algeria" },
-            { fr: "Tunisie", en: "Tunisia" },
-            { fr: "Italie", en: "Italy" },
-            { fr: "Espagne", en: "Spain" },
-            { fr: "Portugal", en: "Portugal" },
-            { fr: "Chine", en: "China" },
-            { fr: "Japon", en: "Japan" },
-            { fr: "Inde", en: "India" },
-            { fr: "Brésil", en: "Brazil" },
-            { fr: "Afrique du Sud", en: "South Africa" }
-        ].sort((a, b) => a.fr.localeCompare(b.fr));
+            "Algeria", "Belgium", "Brazil", "Burundi", "Cameroon", "Canada",
+            "China", "Democratic Republic of the Congo", "France", "Germany",
+            "India", "Italy", "Ivory Coast", "Japan", "Kenya", "Morocco",
+            "Portugal", "Rwanda", "Senegal", "South Africa", "Spain",
+            "Switzerland", "Tanzania", "Tunisia", "United Kingdom", "United States"
+        ].sort((a, b) => a.localeCompare(b, 'fr'));
 
-        // listePays ici est un tableau d'objets { fr: "Belgique", en: "Belgium" }
         function remplirSelectsPays(listePays) {
             let optionsPays = '<option value="">-- Sélectionnez un pays --</option>';
             listePays.forEach(pays => {
-                // value = nom français (affiché + envoyé au serveur du formulaire)
-                // data-en = nom anglais (utilisé en interne pour interroger l'API Hipolabs)
-                optionsPays += `<option value="${pays.fr}" data-en="${pays.en}">${pays.fr}</option>`;
+                optionsPays += `<option value="${pays}">${pays}</option>`;
             });
             $('.select2-pays').html(optionsPays);
             $('.select2-pays').select2({
@@ -386,30 +358,19 @@
             });
         }
 
-        // 1) Récupération de la liste des pays du monde via l'API REST Countries
+        // 1) Récupération de la liste des pays via l'API CountriesNow
         $.ajax({
-            url: 'https://restcountries.com/v3.1/all?fields=name,translations',
+            url: 'https://countriesnow.space/api/v0.1/countries/positions',
             dataType: 'json',
-            success: function(pays) {
-                let listePays = pays.map(p => {
-                    let nomFr = (p.translations && p.translations.fra && p.translations.fra.common)
-                        ? p.translations.fra.common
-                        : p.name.common;
-                    return { fr: nomFr, en: p.name.common };
-                });
-                // dédoublonnage par nom français
-                let vus = new Set();
-                listePays = listePays.filter(p => {
-                    if (vus.has(p.fr)) return false;
-                    vus.add(p.fr);
-                    return true;
-                }).sort((a, b) => a.fr.localeCompare(b.fr));
-
-                listePaysCache = listePays;
+            success: function(json) {
+                if (json.error) throw new Error('Erreur renvoyée par l\'API');
+                let listePays = json.data
+                    .map(c => c.name)
+                    .sort((a, b) => a.localeCompare(b, 'fr'));
                 remplirSelectsPays(listePays);
             },
             error: function() {
-                console.warn('API REST Countries injoignable, utilisation de la liste de secours.');
+                console.warn('API CountriesNow injoignable, utilisation de la liste de secours.');
                 remplirSelectsPays(listePaysSecours);
             }
         });
@@ -421,15 +382,26 @@
             width: '100%'
         });
 
-        // 2) Liaison dynamique : quand l'utilisateur choisit le pays de l'établissement,
-        //    on interroge l'API Hipolabs pour récupérer les universités de ce pays.
-        // Liaison en délégation (plus fiable avec select2, qui redessine le DOM)
+        // 2) Universités : jeu de données complet (Hipo), chargé une seule fois et mis en cache,
+        //    puis filtré côté client selon le pays choisi — pas de proxy CORS nécessaire.
+        let allUniversities = null;
+
+        function fetchAllUniversitiesOnce() {
+            if (allUniversities) {
+                return $.Deferred().resolve(allUniversities).promise();
+            }
+            return $.ajax({
+                url: 'https://cdn.jsdelivr.net/gh/Hipo/university-domains-list/world_universities_and_domains.json',
+                dataType: 'json'
+            }).then(function(data) {
+                allUniversities = data;
+                return allUniversities;
+            });
+        }
+
         $(document).on('change', '#pays_universite', function() {
             let paysSelectionne = $(this).val();
-            let paysPourAPI = $(this).find('option:selected').data('en') || paysSelectionne;
             let uniSelect = $('#universite');
-
-            console.log('[debug] pays sélectionné :', paysSelectionne, '| nom utilisé pour l\'API :', paysPourAPI);
 
             if (!paysSelectionne) {
                 uniSelect.html('<option value="">-- D\'abord, sélectionnez un pays d\'établissement --</option>').trigger('change');
@@ -438,54 +410,26 @@
 
             uniSelect.html('<option value="">Chargement des universités pour ' + paysSelectionne + '...</option>').trigger('change');
 
-            let urlUniversites = 'http://universities.hipolabs.com/search?country=' + encodeURIComponent(paysPourAPI);
+            fetchAllUniversitiesOnce().then(function(data) {
+                const matches = data.filter(u => u.country === paysSelectionne);
 
-            // Plusieurs façons d'atteindre l'API, essayées l'une après l'autre en cas d'échec :
-            // 1) appel direct (fonctionne si le navigateur autorise le contenu mixte / CORS ouvert par Hipolabs)
-            // 2) proxy AllOrigins
-            // 3) proxy corsproxy.io
-            let tentatives = [
-                { url: urlUniversites, direct: true },
-                { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(urlUniversites), direct: false },
-                { url: 'https://corsproxy.io/?' + encodeURIComponent(urlUniversites), direct: false }
-            ];
-
-            function essayer(index) {
-                if (index >= tentatives.length) {
-                    console.error('[debug] Toutes les tentatives ont échoué pour', paysPourAPI);
-                    uniSelect.html('<option value="">Erreur de chargement — voir console (F12) pour le détail</option>').trigger('change');
+                if (!matches.length) {
+                    uniSelect.html('<option value="">Aucune université trouvée pour ce pays</option>').trigger('change');
                     return;
                 }
 
-                console.log('[debug] tentative ' + (index + 1) + ' :', tentatives[index].url);
+                const noms = [...new Set(matches.map(u => u.name))].sort((a, b) => a.localeCompare(b, 'fr'));
 
-                $.ajax({
-                    url: tentatives[index].url,
-                    dataType: 'json',
-                    timeout: 8000,
-                    success: function(universities) {
-                        console.log('[debug] succès, ' + (universities ? universities.length : 0) + ' universités reçues');
-                        let optionsUni = '<option value="">-- Sélectionnez une université --</option>';
-
-                        if (!universities || universities.length === 0) {
-                            optionsUni = '<option value="">Aucune université trouvée pour ce pays</option>';
-                        } else {
-                            universities.sort((a, b) => a.name.localeCompare(b.name));
-                            universities.forEach(function(uni) {
-                                optionsUni += `<option value="${uni.name}">${uni.name}</option>`;
-                            });
-                        }
-
-                        uniSelect.html(optionsUni).trigger('change');
-                    },
-                    error: function(xhr, statut, err) {
-                        console.warn('[debug] échec tentative ' + (index + 1) + ' :', statut, err);
-                        essayer(index + 1);
-                    }
+                let optionsUni = '<option value="">-- Sélectionnez une université --</option>';
+                noms.forEach(nom => {
+                    optionsUni += `<option value="${nom}">${nom}</option>`;
                 });
-            }
 
-            essayer(0);
+                uniSelect.html(optionsUni).trigger('change');
+            }).catch(function(err) {
+                console.error(err);
+                uniSelect.html('<option value="">Erreur de chargement — réessayez plus tard</option>').trigger('change');
+            });
         });
 
         // Génération des années d'obtention
