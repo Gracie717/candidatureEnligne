@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portail de Candidature en Ligne</title>
+    <!-- Intégration de Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --brand-blue: #009EDB;
+            --brand-dark-blue: #1C3F60;
+            --bg-color: #f4f7f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--brand-dark-blue), var(--brand-blue));
+            color: white;
+            padding: 35px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        form {
+            padding: 35px 40px;
+        }
+
+        fieldset {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            background-color: #fafbfc;
+        }
+
+        legend {
+            font-weight: bold;
+            color: var(--brand-dark-blue);
+            font-size: 1.1rem;
+            padding: 0 10px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        select,
+        input[type="file"] {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background-color: #ffffff;
+            color: #334155;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 3px rgba(0, 158, 219, 0.15);
+        }
+
+        .select2-container .select2-selection--single {
+            height: 46px !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 6px !important;
+            padding: 8px 4px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 44px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #334155 !important;
+            line-height: 28px !important;
+        }
+
+        .note {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .btn-submit {
+            background-color: var(--brand-blue);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: #0082b8;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+            form {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Portail de Candidature en Ligne</h1>
+    </div>
+
+    <form action="traitement_candidature.php" method="POST" enctype="multipart/form-data">
+
+        <!-- Informations Personnelles -->
+        <fieldset>
+            <legend>1. Informations Personnelles</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nom">Nom de famille *</label>
+                    <input type="text" id="nom" name="nom" required placeholder="Ex: Nkurunziza">
+                </div>
+                <div class="form-group">
+                    <label for="prenom">Prénom(s) *</label>
+                    <input type="text" id="prenom" name="prenom" required placeholder="Ex: Marie">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date_naissance">Date de naissance *</label>
+                    <input type="date" id="date_naissance" name="date_naissance" required>
+                </div>
+                <div class="form-group">
+                    <label for="genre">Genre *</label>
+                    <select id="genre" name="genre" required>
+                        <option value="">-- Sélectionnez --</option>
+                        <option value="F">Féminin</option>
+                        <option value="M">Masculin</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">Courriel (Email) *</label>
+                    <input type="email" id="email" name="email" required placeholder="exemple@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label for="telephone">Numéro de téléphone *</label>
+                    <input type="tel" id="telephone" name="telephone" required placeholder="+257.....">
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Localisation & Nationalité -->
+        <fieldset>
+            <legend>2. Localisation &amp; Nationalité</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pays_residence">Pays de résidence actuel *</label>
+                    <select id="pays_residence" name="pays_residence" class="select2-pays" required>
+                        <option value="">-- Sélectionnez un pays --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="nationalite">Nationalité principale *</label>
+                    <select id="nationalite" name="nationalite" class="select2-pays" required>
+                        <option value="">-- Sélectionnez un pays --</option>
+                    </select>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Parcours Académique -->
+        <fieldset>
+            <legend>3. Parcours Académique</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="niveau_etudes">Niveau d'études *</label>
+                    <select id="niveau_etudes" name="niveau_etudes" required>
+                        <option value="">-- Sélectionnez --</option>
+                        <option value="Licence">Licence (Bachelor)</option>
+                        <option value="Master">Master / Magistère</option>
+                        <option value="Doctorat">Doctorat (Ph.D.)</option>
+                        <option value="Autre">Autre diplôme supérieur</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="domaine_etudes">Domaine d'études / Spécialité *</label>
+                    <input type="text" id="domaine_etudes" name="domaine_etudes" required placeholder="Ex: Informatique / Génie Logiciel">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <!-- Pays de l'établissement -->
+                <div class="form-group">
+                    <label for="pays_universite">Pays de l'établissement *</label>
+                    <select id="pays_universite" name="pays_universite" class="select2-pays" required>
+                        <option value="">-- Sélectionnez un pays --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="annee_diplome">Année d'obtention *</label>
+                    <select id="annee_diplome" name="annee_diplome" required>
+                        <option value="">-- Année --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Nom de l'Université (chargé dynamiquement via l'API Hipolabs selon le pays choisi) -->
+            <div class="form-group full-width">
+                <label for="universite">Nom de l'Université Accréditée *</label>
+                <select id="universite" name="universite" class="select2-universites" required>
+                    <option value="">-- D'abord, sélectionnez un pays d'établissement ci-dessus --</option>
+                </select>sss
+            </div>
+        </fieldset>
+
+        <!-- Postes et Expérience -->
+        <fieldset>
+            <legend>4. Poste Souhaité</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="categorie_poste">Catégorie de poste visé *</label>
+                    <select id="categorie_poste" name="categorie_poste" required>
+                        <option value="">-- Sélectionnez --</option>
+                        <option value="Junior">Poste Junior</option>
+                        <option value="Confirme">Poste Confirmé</option>
+                        <option value="Manager">Poste Managérial</option>
+                        <option value="Consultant">Consultant / Expert Externe</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="departement">Département visé *</label>
+                    <select id="departement" name="departement" required>
+                        <option value="">-- Sélectionnez un département --</option>
+                        <option value="RH">Ressources Humaines</option>
+                        <option value="IT">Informatique / IT</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Communication">Communication</option>
+                        <option value="Logistique">Logistique</option>
+                    </select>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Pièces Justificatives -->
+        <fieldset>
+            <legend>5. Pièces Justificatives</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cv">Curriculum Vitae (CV) - Format PDF *</label>
+                    <input type="file" id="cv" name="cv" accept=".pdf" required>
+                </div>
+                <div class="form-group">
+                    <label for="lettre_motivation">Lettre de motivation - Format PDF *</label>
+                    <input type="file" id="lettre_motivation" name="lettre_motivation" accept=".pdf" required>
+                </div>
+            </div>
+        </fieldset>
+
+        <button type="submit" class="btn-submit">Soumettre la candidature</button>
+    </form>
+</div>
+
+<!-- Scripts JS : jQuery & Select2 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+
+        // Cache pour éviter de rappeler l'API pays plusieurs fois
+        let listePaysCache = null;
+
+        // Liste de secours si l'API pays est injoignable (mode dégradé)
+        // fr = nom affiché, en = nom utilisé pour interroger l'API Hipolabs
+        const listePaysSecours = [
+            { fr: "Burundi", en: "Burundi" },
+            { fr: "France", en: "France" },
+            { fr: "Belgique", en: "Belgium" },
+            { fr: "Canada", en: "Canada" },
+            { fr: "États-Unis", en: "United States" },
+            { fr: "Allemagne", en: "Germany" },
+            { fr: "Royaume-Uni", en: "United Kingdom" },
+            { fr: "Suisse", en: "Switzerland" },
+            { fr: "Rwanda", en: "Rwanda" },
+            { fr: "Kenya", en: "Kenya" },
+            { fr: "Tanzanie", en: "Tanzania" },
+            { fr: "République démocratique du Congo", en: "Democratic Republic of the Congo" },
+            { fr: "Sénégal", en: "Senegal" },
+            { fr: "Côte d'Ivoire", en: "Ivory Coast" },
+            { fr: "Cameroun", en: "Cameroon" },
+            { fr: "Maroc", en: "Morocco" },
+            { fr: "Algérie", en: "Algeria" },
+            { fr: "Tunisie", en: "Tunisia" },
+            { fr: "Italie", en: "Italy" },
+            { fr: "Espagne", en: "Spain" },
+            { fr: "Portugal", en: "Portugal" },
+            { fr: "Chine", en: "China" },
+            { fr: "Japon", en: "Japan" },
+            { fr: "Inde", en: "India" },
+            { fr: "Brésil", en: "Brazil" },
+            { fr: "Afrique du Sud", en: "South Africa" }
+        ].sort((a, b) => a.fr.localeCompare(b.fr));
+
+        // listePays ici est un tableau d'objets { fr: "Belgique", en: "Belgium" }
+        function remplirSelectsPays(listePays) {
+            let optionsPays = '<option value="">-- Sélectionnez un pays --</option>';
+            listePays.forEach(pays => {
+                // value = nom français (affiché + envoyé au serveur du formulaire)
+                // data-en = nom anglais (utilisé en interne pour interroger l'API Hipolabs)
+                optionsPays += `<option value="${pays.fr}" data-en="${pays.en}">${pays.fr}</option>`;
+            });
+            $('.select2-pays').html(optionsPays);
+            $('.select2-pays').select2({
+                placeholder: "-- Sélectionnez un pays --",
+                allowClear: true,
+                width: '100%'
+            });
+        }
+
+        // 1) Récupération de la liste des pays du monde via l'API REST Countries
+        $.ajax({
+            url: 'https://restcountries.com/v3.1/all?fields=name,translations',
+            dataType: 'json',
+            success: function(pays) {
+                let listePays = pays.map(p => {
+                    let nomFr = (p.translations && p.translations.fra && p.translations.fra.common)
+                        ? p.translations.fra.common
+                        : p.name.common;
+                    return { fr: nomFr, en: p.name.common };
+                });
+                // dédoublonnage par nom français
+                let vus = new Set();
+                listePays = listePays.filter(p => {
+                    if (vus.has(p.fr)) return false;
+                    vus.add(p.fr);
+                    return true;
+                }).sort((a, b) => a.fr.localeCompare(b.fr));
+
+                listePaysCache = listePays;
+                remplirSelectsPays(listePays);
+            },
+            error: function() {
+                console.warn('API REST Countries injoignable, utilisation de la liste de secours.');
+                remplirSelectsPays(listePaysSecours);
+            }
+        });
+
+        // Initialisation du select des universités
+        $('.select2-universites').select2({
+            placeholder: "-- Sélectionnez d'abord un pays d'établissement --",
+            allowClear: true,
+            width: '100%'
+        });
+
+        // 2) Liaison dynamique : quand l'utilisateur choisit le pays de l'établissement,
+        //    on interroge l'API Hipolabs pour récupérer les universités de ce pays.
+        // Liaison en délégation (plus fiable avec select2, qui redessine le DOM)
+        $(document).on('change', '#pays_universite', function() {
+            let paysSelectionne = $(this).val();
+            let paysPourAPI = $(this).find('option:selected').data('en') || paysSelectionne;
+            let uniSelect = $('#universite');
+
+            console.log('[debug] pays sélectionné :', paysSelectionne, '| nom utilisé pour l\'API :', paysPourAPI);
+
+            if (!paysSelectionne) {
+                uniSelect.html('<option value="">-- D\'abord, sélectionnez un pays d\'établissement --</option>').trigger('change');
+                return;
+            }
+
+            uniSelect.html('<option value="">Chargement des universités pour ' + paysSelectionne + '...</option>').trigger('change');
+
+            let urlUniversites = 'http://universities.hipolabs.com/search?country=' + encodeURIComponent(paysPourAPI);
+
+            // Plusieurs façons d'atteindre l'API, essayées l'une après l'autre en cas d'échec :
+            // 1) appel direct (fonctionne si le navigateur autorise le contenu mixte / CORS ouvert par Hipolabs)
+            // 2) proxy AllOrigins
+            // 3) proxy corsproxy.io
+            let tentatives = [
+                { url: urlUniversites, direct: true },
+                { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(urlUniversites), direct: false },
+                { url: 'https://corsproxy.io/?' + encodeURIComponent(urlUniversites), direct: false }
+            ];
+
+            function essayer(index) {
+                if (index >= tentatives.length) {
+                    console.error('[debug] Toutes les tentatives ont échoué pour', paysPourAPI);
+                    uniSelect.html('<option value="">Erreur de chargement — voir console (F12) pour le détail</option>').trigger('change');
+                    return;
+                }
+
+                console.log('[debug] tentative ' + (index + 1) + ' :', tentatives[index].url);
+
+                $.ajax({
+                    url: tentatives[index].url,
+                    dataType: 'json',
+                    timeout: 8000,
+                    success: function(universities) {
+                        console.log('[debug] succès, ' + (universities ? universities.length : 0) + ' universités reçues');
+                        let optionsUni = '<option value="">-- Sélectionnez une université --</option>';
+
+                        if (!universities || universities.length === 0) {
+                            optionsUni = '<option value="">Aucune université trouvée pour ce pays</option>';
+                        } else {
+                            universities.sort((a, b) => a.name.localeCompare(b.name));
+                            universities.forEach(function(uni) {
+                                optionsUni += `<option value="${uni.name}">${uni.name}</option>`;
+                            });
+                        }
+
+                        uniSelect.html(optionsUni).trigger('change');
+                    },
+                    error: function(xhr, statut, err) {
+                        console.warn('[debug] échec tentative ' + (index + 1) + ' :', statut, err);
+                        essayer(index + 1);
+                    }
+                });
+            }
+
+            essayer(0);
+        });
+
+        // Génération des années d'obtention
+        let anneeSelect = $('#annee_diplome');
+        let currentYear = new Date().getFullYear();
+        for (let y = currentYear; y >= 1970; y--) {
+            anneeSelect.append(`<option value="${y}">${y}</option>`);
+        }
+    });
+</script>
+
+</body>
+</html>
